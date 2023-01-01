@@ -1,0 +1,6 @@
+numpy
+numba
+scipy
+librosa
+torch
+unidecode
