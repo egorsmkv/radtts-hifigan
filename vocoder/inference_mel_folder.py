@@ -16,7 +16,7 @@ class AttrDict(dict):
         self.__dict__ = self
 
 
-def load_vocoder(vocoder_path, config_path, to_cuda=True):
+def load_vocoder(vocoder_path, config_path, to_cuda=False):
     with open(config_path) as f:
         data_vocoder = f.read()
     config_vocoder = json.loads(data_vocoder)
