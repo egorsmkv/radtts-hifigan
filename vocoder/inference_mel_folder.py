@@ -59,7 +59,7 @@ def inference(input_mel_folder, vocoder_path, vocoder_config_path, denoising_str
             audio = audio[0].cpu().numpy()
             audio_denoised = audio_denoised[0].cpu().numpy()
             audio_denoised = audio_denoised / np.max(np.abs(audio_denoised))
-            audio_denoised = audio_denoised.cpu().numpy().astype('int16')
+            audio_denoised = audio_denoised.astype('int16')
 
             output_file = input_mel_file.replace('.mel','.wav')
             write(output_file, 22050, audio_denoised)
