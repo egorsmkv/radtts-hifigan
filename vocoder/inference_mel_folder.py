@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 
 import torch
-from scipy.io.wavfile import write
+from scipy.io.wavfile import write, read
 
 from .models import Generator
 from .denoiser import Denoiser
@@ -45,6 +45,42 @@ def load_vocoder(vocoder_path, config_path, to_cuda=False):
     return vocoder, denoiser
 
 
+def float2pcm(sig, dtype='int16'):
+    """Convert floating point signal with a range from -1 to 1 to PCM.
+    Any signal values outside the interval [-1.0, 1.0) are clipped.
+    No dithering is used.
+    Note that there are different possibilities for scaling floating
+    point numbers to PCM numbers, this function implements just one of
+    them.  For an overview of alternatives see
+    http://blog.bjornroche.com/2009/12/int-float-int-its-jungle-out-there.html
+    Parameters
+    ----------
+    sig : array_like
+        Input array, must have floating point type.
+    dtype : data type, optional
+        Desired (integer) data type.
+    Returns
+    -------
+    numpy.ndarray
+        Integer data, scaled and clipped to the range of the given
+        *dtype*.
+    See Also
+    --------
+    pcm2float, dtype
+    """
+    sig = np.asarray(sig)
+    if sig.dtype.kind != 'f':
+        raise TypeError("'sig' must be a float array")
+    dtype = np.dtype(dtype)
+    if dtype.kind not in 'iu':
+        raise TypeError("'dtype' must be an integer type")
+
+    i = np.iinfo(dtype)
+    abs_max = 2 ** (i.bits - 1)
+    offset = i.min + abs_max
+    return (sig * abs_max + offset).clip(i.min, i.max).astype(dtype)
+
+
 def inference(input_mel_folder, vocoder_path, vocoder_config_path, denoising_strength):
     vocoder, denoiser = load_vocoder(vocoder_path, vocoder_config_path)
 
@@ -59,10 +95,16 @@ def inference(input_mel_folder, vocoder_path, vocoder_config_path, denoising_str
             audio = audio[0].cpu().numpy()
             audio_denoised = audio_denoised[0].cpu().numpy()
             audio_denoised = audio_denoised / np.max(np.abs(audio_denoised))
-            audio_denoised = audio_denoised.astype('int16')
 
+            # form a filename
             output_file = input_mel_file.replace('.mel','.wav')
-            write(output_file, 22050, audio_denoised)
+
+            # convert to pcm 16 bit
+            sig = float2pcm(audio_denoised, dtype='int16')
+
+            # save the data to the file
+            write(output_file, 22050, sig)
+
             print('<<--',output_file)
 
             files_all.append(output_file)
@@ -75,6 +117,8 @@ def inference(input_mel_folder, vocoder_path, vocoder_config_path, denoising_str
 
         names_w = [f'{it}.wav' for it in sorted(names)]
 
+        print('To combine all files into one, use this command:')
+        print('')
         print('sox ' + ' '.join(names_w) + ' all.wav')
 
 
