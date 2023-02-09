@@ -114,11 +114,11 @@ def inference(input_mel_folder, vocoder_path, vocoder_config_path, denoising_str
 
         s = '/'
         if platform == "win32":
-            s = '\\'
-            
+            s = 'results\\'
+
         names = []
         for k in files_all:
-            names.append(int(k.replace(input_mel_folder,'').replace(s, '').replace('.wav', '')))
+            names.append(int(k.replace(input_mel_folder, '').replace(s, '').replace('.wav', '')))
 
         names_w = [f'{it}.wav' for it in sorted(names)]
 
