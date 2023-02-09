@@ -2,6 +2,7 @@ import os
 import json
 import numpy as np
 from glob import glob
+from sys import platform
 
 import torch
 from scipy.io.wavfile import write, read
@@ -111,9 +112,13 @@ def inference(input_mel_folder, vocoder_path, vocoder_config_path, denoising_str
 
             os.remove(input_mel_file)
 
+        s = '/'
+        if platform == "win32":
+            s = '\\'
+            
         names = []
         for k in files_all:
-            names.append(int(k.replace(input_mel_folder,'').replace('/','').replace('.wav','')))
+            names.append(int(k.replace(input_mel_folder,'').replace(s, '').replace('.wav', '')))
 
         names_w = [f'{it}.wav' for it in sorted(names)]
 
